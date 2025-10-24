@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Search, Upload, Truck, Edit, Trash2, Download } from "lucide-react";
+import { Plus, Search, Upload, Truck, Edit, Trash2, Download, Building2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -30,15 +30,33 @@ export default function Vehicles() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showBulkUpload, setShowBulkUpload] = useState(false);
+  const [showFleetSetup, setShowFleetSetup] = useState(false);
   const [editingVehicle, setEditingVehicle] = useState(null);
   const [uploadFile, setUploadFile] = useState(null);
   const [uploadError, setUploadError] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
+  const [fleetFormData, setFleetFormData] = useState({
+    company_name: "",
+    contact_email: "",
+    contact_phone: "",
+    address: ""
+  });
+
   React.useEffect(() => {
     const loadUser = async () => {
       const currentUser = await base44.auth.me();
       setUser(currentUser);
+      
+      if (currentUser.user_role === 'fleet_manager' && !currentUser.fleet_id) {
+        setShowFleetSetup(true);
+        setFleetFormData({
+          company_name: "",
+          contact_email: currentUser.email,
+          contact_phone: currentUser.phone || "",
+          address: ""
+        });
+      }
     };
     loadUser();
   }, []);
@@ -58,6 +76,27 @@ export default function Vehicles() {
     queryFn: () => base44.entities.Vehicle.filter({ fleet_id: user?.fleet_id }, '-created_date'),
     enabled: !!user?.fleet_id,
     initialData: [],
+  });
+
+  const createFleetMutation = useMutation({
+    mutationFn: async (fleetData) => {
+      const fleet = await base44.entities.Fleet.create(fleetData);
+      await base44.auth.updateMe({ fleet_id: fleet.id });
+      await base44.entities.Administrator.create({
+        fleet_id: fleet.id,
+        user_email: user.email,
+        user_name: user.full_name || user.email,
+        phone: user.phone || "",
+        is_primary: true
+      });
+      return fleet;
+    },
+    onSuccess: async () => {
+      const updatedUser = await base44.auth.me();
+      setUser(updatedUser);
+      setShowFleetSetup(false);
+      queryClient.invalidateQueries({ queryKey: ['vehicles'] });
+    },
   });
 
   const createMutation = useMutation({
@@ -105,6 +144,11 @@ export default function Vehicles() {
     } else {
       createMutation.mutate(formData);
     }
+  };
+
+  const handleFleetSetup = (e) => {
+    e.preventDefault();
+    createFleetMutation.mutate(fleetFormData);
   };
 
   const handleEdit = (vehicle) => {
@@ -189,6 +233,71 @@ export default function Vehicles() {
     vehicle.make?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     vehicle.model?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  if (showFleetSetup) {
+    return (
+      <div className="p-4 md:p-8 bg-gradient-to-br from-blue-50 to-indigo-50 min-h-screen flex items-center justify-center">
+        <Card className="max-w-2xl w-full shadow-xl">
+          <CardHeader className="text-center pb-2">
+            <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Building2 className="w-8 h-8 text-white" />
+            </div>
+            <CardTitle className="text-2xl">Welcome to Fleet Service!</CardTitle>
+            <p className="text-gray-500 mt-2">Let's set up your fleet account to get started</p>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <form onSubmit={handleFleetSetup}>
+              <div className="space-y-4">
+                <div>
+                  <Label>Company Name *</Label>
+                  <Input
+                    value={fleetFormData.company_name}
+                    onChange={(e) => setFleetFormData({...fleetFormData, company_name: e.target.value})}
+                    required
+                    placeholder="Your Company Name"
+                  />
+                </div>
+                <div>
+                  <Label>Contact Email *</Label>
+                  <Input
+                    type="email"
+                    value={fleetFormData.contact_email}
+                    onChange={(e) => setFleetFormData({...fleetFormData, contact_email: e.target.value})}
+                    required
+                    placeholder="contact@company.com"
+                  />
+                </div>
+                <div>
+                  <Label>Contact Phone</Label>
+                  <Input
+                    type="tel"
+                    value={fleetFormData.contact_phone}
+                    onChange={(e) => setFleetFormData({...fleetFormData, contact_phone: e.target.value})}
+                    placeholder="+1 (555) 123-4567"
+                  />
+                </div>
+                <div>
+                  <Label>Address</Label>
+                  <Textarea
+                    value={fleetFormData.address}
+                    onChange={(e) => setFleetFormData({...fleetFormData, address: e.target.value})}
+                    placeholder="123 Main St, City, State ZIP"
+                  />
+                </div>
+              </div>
+              <Button 
+                type="submit" 
+                className="w-full mt-6 bg-blue-600 hover:bg-blue-700"
+                disabled={createFleetMutation.isLoading}
+              >
+                {createFleetMutation.isLoading ? "Setting up..." : "Create Fleet Account"}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 md:p-8 bg-gray-50 min-h-screen">
