@@ -1,0 +1,20 @@
+{
+  "user_role": {
+    "type": "string",
+    "enum": [
+      "fleet_manager",
+      "mechanic",
+      "admin"
+    ],
+    "default": "fleet_manager",
+    "description": "Role determines which portal the user sees"
+  },
+  "fleet_id": {
+    "type": "string",
+    "description": "For fleet managers - their fleet ID"
+  },
+  "phone": {
+    "type": "string"
+  },
+  "name": "User"
+}

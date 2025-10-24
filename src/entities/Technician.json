@@ -1,0 +1,32 @@
+{
+  "name": "Technician",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string",
+      "format": "email"
+    },
+    "specialization": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "available",
+        "busy",
+        "off_duty"
+      ],
+      "default": "available"
+    }
+  },
+  "required": [
+    "name",
+    "phone"
+  ]
+}

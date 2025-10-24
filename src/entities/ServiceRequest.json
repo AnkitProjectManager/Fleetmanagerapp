@@ -1,0 +1,93 @@
+{
+  "name": "ServiceRequest",
+  "type": "object",
+  "properties": {
+    "fleet_id": {
+      "type": "string"
+    },
+    "vehicle_id": {
+      "type": "string"
+    },
+    "requested_by": {
+      "type": "string",
+      "description": "Email of administrator who requested"
+    },
+    "requested_services": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "service_id": {
+            "type": "string"
+          },
+          "service_name": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "waiting",
+        "in_progress",
+        "completed",
+        "cancelled"
+      ],
+      "default": "waiting"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "low",
+        "normal",
+        "high",
+        "urgent"
+      ],
+      "default": "normal"
+    },
+    "assigned_technician_id": {
+      "type": "string"
+    },
+    "assigned_technician_name": {
+      "type": "string"
+    },
+    "scheduled_date": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "completed_date": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "work_notes": {
+      "type": "string"
+    },
+    "modifications_log": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "timestamp": {
+            "type": "string"
+          },
+          "modified_by": {
+            "type": "string"
+          },
+          "change_description": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "required": [
+    "fleet_id",
+    "vehicle_id",
+    "requested_by",
+    "requested_services"
+  ]
+}
