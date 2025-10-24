@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -151,7 +150,7 @@ export default function Vehicles() {
     });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     
     if (!formData.vin || !formData.license_plate || !formData.make || !formData.model) {
@@ -166,7 +165,7 @@ export default function Vehicles() {
     }
   };
 
-  const handleFleetSetup = async (e) => {
+  const handleFleetSetup = (e) => {
     e.preventDefault();
     createFleetMutation.mutate(fleetFormData);
   };
