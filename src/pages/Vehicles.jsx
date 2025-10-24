@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -100,7 +101,14 @@ export default function Vehicles() {
   });
 
   const createMutation = useMutation({
-    mutationFn: (vehicleData) => base44.entities.Vehicle.create({ ...vehicleData, fleet_id: user.fleet_id }),
+    mutationFn: async (vehicleData) => {
+      const vehicleToCreate = { 
+        ...vehicleData, 
+        fleet_id: user.fleet_id,
+        year: parseInt(vehicleData.year)
+      };
+      return await base44.entities.Vehicle.create(vehicleToCreate);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['vehicles'] });
       setShowAddDialog(false);
@@ -109,7 +117,13 @@ export default function Vehicles() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.Vehicle.update(id, data),
+    mutationFn: ({ id, data }) => {
+      const vehicleToUpdate = {
+        ...data,
+        year: parseInt(data.year)
+      };
+      return base44.entities.Vehicle.update(id, vehicleToUpdate);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['vehicles'] });
       setShowAddDialog(false);
@@ -137,8 +151,14 @@ export default function Vehicles() {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!formData.vin || !formData.license_plate || !formData.make || !formData.model) {
+      alert("Please fill in all required fields");
+      return;
+    }
+
     if (editingVehicle) {
       updateMutation.mutate({ id: editingVehicle.id, data: formData });
     } else {
@@ -146,7 +166,7 @@ export default function Vehicles() {
     }
   };
 
-  const handleFleetSetup = (e) => {
+  const handleFleetSetup = async (e) => {
     e.preventDefault();
     createFleetMutation.mutate(fleetFormData);
   };
@@ -249,8 +269,9 @@ export default function Vehicles() {
             <form onSubmit={handleFleetSetup}>
               <div className="space-y-4">
                 <div>
-                  <Label>Company Name *</Label>
+                  <Label htmlFor="companyName">Company Name *</Label>
                   <Input
+                    id="companyName"
                     value={fleetFormData.company_name}
                     onChange={(e) => setFleetFormData({...fleetFormData, company_name: e.target.value})}
                     required
@@ -258,8 +279,9 @@ export default function Vehicles() {
                   />
                 </div>
                 <div>
-                  <Label>Contact Email *</Label>
+                  <Label htmlFor="contactEmail">Contact Email *</Label>
                   <Input
+                    id="contactEmail"
                     type="email"
                     value={fleetFormData.contact_email}
                     onChange={(e) => setFleetFormData({...fleetFormData, contact_email: e.target.value})}
@@ -268,8 +290,9 @@ export default function Vehicles() {
                   />
                 </div>
                 <div>
-                  <Label>Contact Phone</Label>
+                  <Label htmlFor="contactPhone">Contact Phone</Label>
                   <Input
+                    id="contactPhone"
                     type="tel"
                     value={fleetFormData.contact_phone}
                     onChange={(e) => setFleetFormData({...fleetFormData, contact_phone: e.target.value})}
@@ -277,8 +300,9 @@ export default function Vehicles() {
                   />
                 </div>
                 <div>
-                  <Label>Address</Label>
+                  <Label htmlFor="address">Address</Label>
                   <Textarea
+                    id="address"
                     value={fleetFormData.address}
                     onChange={(e) => setFleetFormData({...fleetFormData, address: e.target.value})}
                     placeholder="123 Main St, City, State ZIP"
@@ -453,8 +477,9 @@ export default function Vehicles() {
             <form onSubmit={handleSubmit}>
               <div className="grid grid-cols-2 gap-4 py-4">
                 <div className="col-span-2">
-                  <Label>VIN *</Label>
+                  <Label htmlFor="vin">VIN *</Label>
                   <Input
+                    id="vin"
                     value={formData.vin}
                     onChange={(e) => setFormData({...formData, vin: e.target.value})}
                     required
@@ -462,8 +487,9 @@ export default function Vehicles() {
                   />
                 </div>
                 <div className="col-span-2">
-                  <Label>License Plate *</Label>
+                  <Label htmlFor="license">License Plate *</Label>
                   <Input
+                    id="license"
                     value={formData.license_plate}
                     onChange={(e) => setFormData({...formData, license_plate: e.target.value})}
                     required
@@ -471,23 +497,24 @@ export default function Vehicles() {
                   />
                 </div>
                 <div>
-                  <Label>Year *</Label>
+                  <Label htmlFor="year">Year *</Label>
                   <Input
+                    id="year"
                     type="number"
                     value={formData.year}
-                    onChange={(e) => setFormData({...formData, year: parseInt(e.target.value)})}
+                    onChange={(e) => setFormData({...formData, year: e.target.value})}
                     required
                     min="1900"
                     max={new Date().getFullYear() + 1}
                   />
                 </div>
                 <div>
-                  <Label>Status</Label>
+                  <Label htmlFor="status">Status</Label>
                   <Select
                     value={formData.status}
                     onValueChange={(value) => setFormData({...formData, status: value})}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger id="status">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -498,8 +525,9 @@ export default function Vehicles() {
                   </Select>
                 </div>
                 <div>
-                  <Label>Make *</Label>
+                  <Label htmlFor="make">Make *</Label>
                   <Input
+                    id="make"
                     value={formData.make}
                     onChange={(e) => setFormData({...formData, make: e.target.value})}
                     required
@@ -507,8 +535,9 @@ export default function Vehicles() {
                   />
                 </div>
                 <div>
-                  <Label>Model *</Label>
+                  <Label htmlFor="model">Model *</Label>
                   <Input
+                    id="model"
                     value={formData.model}
                     onChange={(e) => setFormData({...formData, model: e.target.value})}
                     required
@@ -516,8 +545,9 @@ export default function Vehicles() {
                   />
                 </div>
                 <div className="col-span-2">
-                  <Label>Notes</Label>
+                  <Label htmlFor="notes">Notes</Label>
                   <Textarea
+                    id="notes"
                     value={formData.notes}
                     onChange={(e) => setFormData({...formData, notes: e.target.value})}
                     placeholder="Additional notes about this vehicle..."
@@ -536,8 +566,15 @@ export default function Vehicles() {
                 >
                   Cancel
                 </Button>
-                <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
-                  {editingVehicle ? "Update" : "Add"} Vehicle
+                <Button 
+                  type="submit" 
+                  className="bg-blue-600 hover:bg-blue-700"
+                  disabled={createMutation.isLoading || updateMutation.isLoading}
+                >
+                  {createMutation.isLoading || updateMutation.isLoading 
+                    ? "Saving..." 
+                    : editingVehicle ? "Update Vehicle" : "Add Vehicle"
+                  }
                 </Button>
               </DialogFooter>
             </form>
