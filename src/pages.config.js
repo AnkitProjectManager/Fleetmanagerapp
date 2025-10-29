@@ -7,6 +7,7 @@ import FleetClients from './pages/FleetClients';
 import ServicesCatalog from './pages/ServicesCatalog';
 import Technicians from './pages/Technicians';
 import Invoices from './pages/Invoices';
+import FleetControls from './pages/FleetControls';
 import Layout from './Layout.jsx';
 
 
@@ -20,6 +21,7 @@ export const PAGES = {
     "ServicesCatalog": ServicesCatalog,
     "Technicians": Technicians,
     "Invoices": Invoices,
+    "FleetControls": FleetControls,
 }
 
 export const pagesConfig = {

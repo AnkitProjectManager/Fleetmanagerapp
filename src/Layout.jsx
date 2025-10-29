@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -54,6 +55,7 @@ export default function Layout({ children }) {
     { title: "Dashboard", url: createPageUrl("Dashboard"), icon: LayoutDashboard },
     { title: "Vehicles", url: createPageUrl("Vehicles"), icon: Truck },
     { title: "Service Requests", url: createPageUrl("ServiceRequests"), icon: FileText },
+    { title: "Fleet Controls", url: createPageUrl("FleetControls"), icon: Settings },
     { title: "Administrators", url: createPageUrl("Administrators"), icon: Users },
   ];
 
