@@ -7,7 +7,7 @@ A modern, scalable electric vehicle fleet management system built with a separat
 This project has been restructured into a clean separation of concerns:
 
 ### Frontend (React + Vite)
-- **Location**: Root directory
+- **Location**: `./frontend/`
 - **Technology**: React 18, Vite, TailwindCSS, Radix UI
 - **Purpose**: User interface and client-side logic
 
@@ -66,30 +66,67 @@ npm run dev
 ## 📁 Project Structure
 
 ```
-roll-charge-fleet-manager/
-├── backend/                 # Backend API Server
+Fleetmanagerapp/
+├── backend/                 # Backend API Server (Node + Express)
 │   ├── src/
 │   │   ├── config/         # Configuration files
 │   │   ├── controllers/    # Route controllers
 │   │   ├── middleware/     # Express middleware
 │   │   ├── routes/         # API route definitions
-│   │   ├── services/       # Business logic & external service integration
-│   │   └── app.js         # Express application
-│   ├── package.json       # Backend dependencies
-│   ├── Dockerfile         # Backend container config
-│   └── .env.example       # Backend environment template
-├── src/                    # Frontend React Application
-│   ├── api/               # API client & services
-│   ├── components/        # Reusable UI components
-│   ├── pages/            # Page components
-│   ├── lib/              # Utility libraries
-│   └── ...
-├── docker-compose.yml     # Production container orchestration
-├── docker-compose.dev.yml # Development container orchestration
-├── package.json          # Frontend dependencies
-├── Dockerfile            # Frontend container config
-└── deploy_template.sh    # Deployment script
+│   │   ├── services/       # Business logic & integrations
+│   │   ├── models/         # Mongoose models
+│   │   ├── utils/          # Helpers
+│   │   ├── app.js          # Express application
+│   │   └── server.js       # Server bootstrap
+│   ├── scripts/            # Local tooling & smoke tests
+│   ├── package.json        # Backend dependencies & scripts
+│   ├── Dockerfile          # Backend container config
+│   └── .env.example        # Backend environment template
+├── frontend/               # Frontend React Application (Vite)
+│   ├── public/
+│   ├── src/
+│   │   ├── components/
+│   │   ├── contexts/
+│   │   ├── pages/
+│   │   ├── lib/
+│   │   └── main.jsx
+│   ├── package.json        # Frontend dependencies & scripts
+│   ├── vite.config.js      # Vite config
+│   └── tailwind.config.js  # Tailwind config
+├── .env.example            # Frontend env template (optional)
+├── README.md               # Monorepo guide (this file)
+└── deploy_template.sh      # Deployment script (optional)
 ```
+
+> Note: We intentionally removed legacy duplicate sources and archived copies to keep the repository clean. Only `backend/` and `frontend/` contain live code.
+
+## 🧪 Local Development (Monorepo)
+
+Open two terminals and run each app independently.
+
+### Backend
+
+```powershell
+cd backend
+npm install
+copy .env.example .env   # then edit values
+npm run dev              # starts at http://localhost:5000
+```
+
+### Frontend
+
+```powershell
+cd frontend
+npm install
+# Configure Vite env (create .env if not present)
+echo VITE_API_URL=http://localhost:5000/api/v1 > .env
+echo VITE_NODE_ENV=development >> .env
+npm run dev -- --port 5173    # http://localhost:5173
+```
+
+Ensure CORS on the backend allows your chosen frontend port. The backend already enables 3000, 3001, and 5173.
+
+## 🔐 Environment Configuration
 
 ## 🔌 API Endpoints
 
@@ -141,6 +178,160 @@ EXTERNAL_FUNCTIONS_VERSION=v1
 FRONTEND_URL=http://localhost:3000
 JWT_SECRET=your_jwt_secret_here
 ```
+
+## 🚀 Deployment Guide (End-to-End)
+
+You can deploy the backend and frontend separately. Below are three reliable options.
+
+### Option A: Docker (Recommended)
+
+Build and run each service in its own container.
+
+Backend:
+```powershell
+cd backend
+docker build -t fleet-backend:latest .
+docker run -d -p 5000:5000 --env-file .env --name fleet-backend fleet-backend:latest
+```
+
+Frontend (static build served by a minimal Node adapter or any static host):
+```powershell
+cd frontend
+npm ci
+npm run build         # outputs to dist/
+# Serve with a static server (example using npm package 'serve')
+npm i -g serve
+serve -s dist -l 5173
+```
+
+Optional: Compose both together. Create a `docker-compose.yml` at the repo root:
+
+```yaml
+version: "3.9"
+services:
+	api:
+		build: ./backend
+		container_name: fleet-backend
+		env_file: ./backend/.env
+		ports:
+			- "5000:5000"
+	web:
+		build:
+			context: ./frontend
+			dockerfile: Dockerfile
+		container_name: fleet-frontend
+		ports:
+			- "5173:5173"
+		depends_on:
+			- api
+```
+
+Then run:
+
+```powershell
+docker compose up -d --build
+```
+
+### Option B: Traditional VM/Server
+
+Backend:
+```bash
+cd backend
+npm ci
+pm2 start src/server.js --name fleet-backend
+```
+
+Frontend:
+```bash
+cd frontend
+npm ci
+npm run build
+# Copy dist/ to your web server (Nginx/Apache/S3+CloudFront/etc.)
+```
+
+Nginx example for serving the frontend and proxying API:
+
+```nginx
+server {
+	listen 80;
+	server_name yourdomain.com;
+
+	location /api/ {
+		proxy_pass http://localhost:5000/api/;
+		proxy_set_header Host $host;
+		proxy_set_header X-Real-IP $remote_addr;
+	}
+
+	location / {
+		root /var/www/fleet-frontend;  # path to dist/
+		try_files $uri /index.html;
+	}
+}
+```
+
+### Option C: Managed Platforms
+
+- Backend: Render/Heroku/Fly.io (Node service).
+- Frontend: Vercel/Netlify/Cloudflare Pages (static site).
+
+Configure the frontend environment `VITE_API_URL` to point to the deployed backend URL.
+
+## 🧹 Repository Hygiene & Maintenance
+
+- Keep live code only under `backend/` and `frontend/`.
+- Prefer feature branches and Pull Requests; protect `main`.
+- Use semantic commit messages (feat:, fix:, chore:, docs:).
+- Add `.env.example` files and never commit real secrets.
+- Run `npm ci` in CI for reproducible installs.
+- Consider npm workspaces for shared tooling:
+
+```json
+{
+	"name": "fleetmanagerapp",
+	"private": true,
+	"workspaces": ["backend", "frontend"]
+}
+```
+
+- Optional CI (GitHub Actions) skeleton:
+
+```yaml
+name: CI
+on: [push, pull_request]
+jobs:
+	backend:
+		runs-on: ubuntu-latest
+		defaults:
+			run:
+				working-directory: backend
+		steps:
+			- uses: actions/checkout@v4
+			- uses: actions/setup-node@v4
+				with:
+					node-version: 18
+			- run: npm ci
+			- run: npm run lint --if-present
+			- run: npm test --if-present
+
+	frontend:
+		runs-on: ubuntu-latest
+		defaults:
+			run:
+				working-directory: frontend
+		steps:
+			- uses: actions/checkout@v4
+			- uses: actions/setup-node@v4
+				with:
+					node-version: 18
+			- run: npm ci
+			- run: npm run build
+```
+
+## ✅ Summary
+
+- Repository is now a clean monorepo with `backend/` and `frontend/` only.
+- Legacy duplicates removed to simplify deployment.
+- Use the guides above to run locally or deploy via Docker/VM/managed hosts.
 
 ## 🐳 Docker Deployment
 
