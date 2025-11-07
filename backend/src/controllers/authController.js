@@ -1,10 +1,11 @@
 import { AuthService } from '../services/authService.js';
 import { asyncHandler } from '../middleware/validation.js';
+import passport from '../config/passport.js';
 
 export class AuthController {
   // POST /api/v1/auth/login
   static login = asyncHandler(async (req, res) => {
-    const { email, password } = req.body;
+    const { email, password, rememberMe } = req.body;
     
     if (!email || !password) {
       return res.status(400).json({
@@ -14,7 +15,7 @@ export class AuthController {
     }
 
     try {
-      const result = await AuthService.login(email, password);
+      const result = await AuthService.login(email, password, rememberMe);
       
       res.json({
         success: true,
@@ -132,6 +133,175 @@ export class AuthController {
       success: true,
       message: 'Logout successful'
     });
+  });
+
+  // POST /api/v1/auth/send-signup-otp
+  static sendSignupOtp = asyncHandler(async (req, res) => {
+    const { email, firstName } = req.body;
+    
+    if (!email || !firstName) {
+      return res.status(400).json({
+        success: false,
+        error: 'Email and first name are required'
+      });
+    }
+
+    try {
+      const result = await AuthService.sendSignupOtp(email, firstName);
+      
+      res.json({
+        success: true,
+        data: result,
+        message: 'OTP sent successfully'
+      });
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
+
+  // POST /api/v1/auth/verify-signup-otp
+  static verifySignupOtp = asyncHandler(async (req, res) => {
+    const { email, otp, firstName, lastName, password, role = 'fleet_manager' } = req.body;
+    
+    if (!email || !otp || !firstName || !lastName || !password) {
+      return res.status(400).json({
+        success: false,
+        error: 'All fields are required'
+      });
+    }
+
+    try {
+      const result = await AuthService.verifySignupOtp(email, otp, {
+        firstName,
+        lastName,
+        password,
+        role
+      });
+      
+      res.status(201).json({
+        success: true,
+        data: result,
+        message: 'Registration successful'
+      });
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
+
+  // POST /api/v1/auth/forgot-password
+  static forgotPassword = asyncHandler(async (req, res) => {
+    const { email } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        error: 'Email is required'
+      });
+    }
+
+    try {
+      const result = await AuthService.requestPasswordReset(email);
+      
+      res.json({
+        success: true,
+        data: result,
+        message: result.message
+      });
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
+
+  // POST /api/v1/auth/reset-password
+  static resetPassword = asyncHandler(async (req, res) => {
+    const { token, password } = req.body;
+    
+    if (!token || !password) {
+      return res.status(400).json({
+        success: false,
+        error: 'Token and password are required'
+      });
+    }
+
+    try {
+      const result = await AuthService.resetPassword(token, password);
+      
+      res.json({
+        success: true,
+        data: result,
+        message: result.message
+      });
+    } catch (error) {
+      res.status(400).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
+
+  // POST /api/v1/auth/refresh-token
+  static refreshToken = asyncHandler(async (req, res) => {
+    const { refreshToken } = req.body;
+    
+    if (!refreshToken) {
+      return res.status(400).json({
+        success: false,
+        error: 'Refresh token is required'
+      });
+    }
+
+    try {
+      const result = await AuthService.refreshToken(refreshToken);
+      
+      res.json({
+        success: true,
+        data: result,
+        message: 'Token refreshed successfully'
+      });
+    } catch (error) {
+      res.status(401).json({
+        success: false,
+        error: error.message
+      });
+    }
+  });
+
+  // GET /api/v1/auth/google
+  static googleAuth = passport.authenticate('google', {
+    scope: ['profile', 'email']
+  });
+
+  // GET /api/v1/auth/google/callback
+  static googleCallback = asyncHandler(async (req, res) => {
+    passport.authenticate('google', { session: false }, async (err, user) => {
+      if (err) {
+        return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?error=oauth_error`);
+      }
+
+      if (!user) {
+        return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?error=oauth_failed`);
+      }
+
+      try {
+        const result = await AuthService.googleAuth(user);
+        
+        // Redirect to frontend with tokens (in production, use more secure method)
+        const redirectUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/auth/callback?token=${result.accessToken}&refresh=${result.refreshToken}`;
+        res.redirect(redirectUrl);
+      } catch (error) {
+        console.error('Google auth error:', error);
+        res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?error=auth_failed`);
+      }
+    })(req, res);
   });
 }
 

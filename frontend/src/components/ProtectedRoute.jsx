@@ -3,9 +3,9 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 const ProtectedRoute = ({ children, roles = [] }) => {
-  const { user, loading } = useAuth();
+  const { user, isLoading, isAuthenticated } = useAuth();
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-lg">Loading...</div>
@@ -13,8 +13,8 @@ const ProtectedRoute = ({ children, roles = [] }) => {
     );
   }
 
-  if (!user) {
-    return <Navigate to="/login" replace />;
+  if (!isAuthenticated || !user) {
+    return <Navigate to="/signin" replace />;
   }
 
   if (roles.length > 0 && !roles.includes(user.role)) {
