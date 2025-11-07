@@ -1,0 +1,53 @@
+name: Backend CI
+
+on:
+  push:
+    branches: [ backend-branch ]
+  pull_request:
+    branches: [ backend-branch ]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    env:
+      NODE_ENV: test
+      MONGODB_URI: mongodb://127.0.0.1:27017/fleet_test
+      JWT_SECRET: test_secret
+    services:
+      mongo:
+        image: mongo:6
+        ports: ["27017:27017"]
+        options: >-
+          --health-cmd "mongosh --eval 'db.runCommand(\"ping\")'" \
+          --health-interval 10s \
+          --health-timeout 5s \
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+      - name: Install deps
+        working-directory: backend
+        run: npm ci || npm install
+      - name: Lint
+        working-directory: backend
+        run: npm run lint --if-present
+      - name: Run tests
+        working-directory: backend
+        run: |
+          if npm run | grep -q "test"; then npm test -- --ci --passWithNoTests; else echo "No tests"; fi
+      - name: Build Docker image
+        working-directory: backend
+        run: |
+          echo "FROM node:18-alpine" > Dockerfile.ci
+          echo "WORKDIR /app" >> Dockerfile.ci
+          echo "COPY package*.json ./" >> Dockerfile.ci
+          echo "RUN npm ci --omit=dev" >> Dockerfile.ci
+          echo "COPY . ." >> Dockerfile.ci
+          echo "EXPOSE 5000" >> Dockerfile.ci
+          echo "CMD [ \"node\", \"src/server.js\" ]" >> Dockerfile.ci
+          docker build -f Dockerfile.ci -t fleet-backend-ci:latest .
