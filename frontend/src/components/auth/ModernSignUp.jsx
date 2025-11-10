@@ -14,6 +14,7 @@ import {
   Shield,
   Sparkles
 } from 'lucide-react';
+import { authAPI } from '../../services/api';
 
 const ModernSignUp = () => {
   const navigate = useNavigate();
@@ -95,25 +96,22 @@ const ModernSignUp = () => {
     setError('');
 
     try {
-      // Call verify OTP API
-      const response = await fetch('/api/auth/verify-otp', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: formData.email, otp })
+      const { data } = await authAPI.verifyOtp({
+        email: formData.email,
+        otp
       });
-      
-      const result = await response.json();
-      
-      if (result.success) {
+
+      if (data?.success) {
         setStep('complete');
         setTimeout(() => {
           navigate('/dashboard');
         }, 2000);
       } else {
-        setError(result.message || 'Invalid verification code');
+        setError(data?.message || 'Invalid verification code');
       }
     } catch (err) {
-      setError('Failed to verify code. Please try again.');
+      const message = err.response?.data?.message || err.message || 'Failed to verify code. Please try again.';
+      setError(message);
     } finally {
       setOtpLoading(false);
     }

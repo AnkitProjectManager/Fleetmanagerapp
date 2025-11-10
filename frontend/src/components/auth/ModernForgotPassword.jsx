@@ -10,6 +10,7 @@ import {
   Shield,
   Clock
 } from 'lucide-react';
+import { authAPI } from '../../services/api';
 
 const ModernForgotPassword = () => {
   const [step, setStep] = useState('email'); // 'email' | 'sent' | 'success'
@@ -29,21 +30,16 @@ const ModernForgotPassword = () => {
     setError('');
 
     try {
-      const response = await fetch('/api/auth/forgot-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
-      });
-      
-      const result = await response.json();
-      
-      if (result.success) {
+      const { data } = await authAPI.forgotPassword({ email });
+
+      if (data?.success) {
         setStep('sent');
       } else {
-        setError(result.message || 'Failed to send reset email');
+        setError(data?.message || 'Failed to send reset email');
       }
     } catch (err) {
-      setError('Something went wrong. Please try again.');
+      const message = err.response?.data?.message || err.message || 'Something went wrong. Please try again.';
+      setError(message);
     } finally {
       setLoading(false);
     }

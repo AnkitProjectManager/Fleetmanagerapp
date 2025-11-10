@@ -119,7 +119,8 @@ npm run dev              # starts at http://localhost:5000
 cd frontend
 npm install
 # Configure Vite env (create .env if not present)
-echo VITE_API_URL=http://localhost:5000/api/v1 > .env
+echo VITE_API_URL=http://localhost:5000/api > .env
+echo VITE_API_VERSION=v1 >> .env
 echo VITE_NODE_ENV=development >> .env
 npm run dev -- --port 5173    # http://localhost:5173
 ```
@@ -163,7 +164,8 @@ Ensure CORS on the backend allows your chosen frontend port. The backend already
 
 ### Frontend Environment Variables
 ```env
-VITE_API_URL=http://localhost:5000/api/v1
+VITE_API_URL=http://localhost:5000/api
+VITE_API_VERSION=v1
 VITE_NODE_ENV=development
 ```
 
