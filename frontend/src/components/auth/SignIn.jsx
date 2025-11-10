@@ -8,7 +8,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '../ui/Card
 import { Checkbox } from '../ui/Checkbox';
 import { Alert, AlertDescription } from '../ui/Alert';
 import { Eye, EyeOff, Mail, Lock, AlertCircle, Sparkles } from 'lucide-react';
-import { RollChargeLogo } from '../ui/RollChargeLogo';
+import RollChargeLogo from '../ui/RollChargeLogo';
 
 const SignIn = () => {
   const navigate = useNavigate();
