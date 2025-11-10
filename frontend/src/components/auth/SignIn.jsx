@@ -8,6 +8,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '../ui/Card
 import { Checkbox } from '../ui/Checkbox';
 import { Alert, AlertDescription } from '../ui/Alert';
 import { Eye, EyeOff, Mail, Lock, AlertCircle, Sparkles } from 'lucide-react';
+import { RollChargeLogo } from '../ui/RollChargeLogo';
 
 const SignIn = () => {
   const navigate = useNavigate();
@@ -94,11 +95,7 @@ const SignIn = () => {
       <Card className="w-full max-w-sm mx-auto bg-white/95 backdrop-blur-sm border border-gray-200 shadow-2xl relative z-10 rounded-3xl overflow-hidden">
         <CardHeader className="space-y-8 text-center pb-8 pt-12">
           <div className="flex justify-center">
-            <img 
-              src="/src/assets/ev-repair-logo.923ecc755fed70eb61ca (1).png" 
-              alt="Roll & Charge Fleet Management" 
-              className="w-32 h-auto shadow-xl" 
-            />
+            <RollChargeLogo />
           </div>
           <div className="space-y-3 mt-6">
             <CardTitle className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
