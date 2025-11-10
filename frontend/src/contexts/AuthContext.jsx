@@ -1,9 +1,8 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import axios from 'axios';
+import { API_BASE_URL } from '../config/api';
 
 const AuthContext = createContext();
-
-const API_BASE_URL = 'http://localhost:5000/api/v1';
 
 // Action types
 const AUTH_ACTIONS = {
@@ -150,7 +149,7 @@ export function AuthProvider({ children }) {
   // Refresh token function
   const refreshTokenFn = async (refreshToken) => {
     try {
-      const response = await axios.post(`${API_BASE_URL}/auth/refresh-token`, {
+      const response = await axios.post(`${API_BASE_URL}/v1/auth/refresh-token`, {
         refreshToken
       });
 
@@ -181,7 +180,7 @@ export function AuthProvider({ children }) {
     try {
       dispatch({ type: AUTH_ACTIONS.LOGIN_START });
 
-      const response = await axios.post(`${API_BASE_URL}/auth/login`, {
+      const response = await axios.post(`${API_BASE_URL}/v1/auth/login`, {
         email,
         password,
         rememberMe
@@ -213,7 +212,7 @@ export function AuthProvider({ children }) {
     try {
       dispatch({ type: AUTH_ACTIONS.LOGIN_START });
 
-      const response = await axios.post(`${API_BASE_URL}/auth/register`, userData);
+  const response = await axios.post(`${API_BASE_URL}/v1/auth/register`, userData);
 
       const { user, accessToken, refreshToken } = response.data.data;
 
@@ -239,7 +238,7 @@ export function AuthProvider({ children }) {
 
   const sendSignupOtp = async (email, firstName) => {
     try {
-      const response = await axios.post(`${API_BASE_URL}/auth/send-signup-otp`, {
+      const response = await axios.post(`${API_BASE_URL}/v1/auth/send-signup-otp`, {
         email,
         firstName
       });
@@ -253,7 +252,7 @@ export function AuthProvider({ children }) {
     try {
       dispatch({ type: AUTH_ACTIONS.LOGIN_START });
 
-      const response = await axios.post(`${API_BASE_URL}/auth/verify-signup-otp`, {
+      const response = await axios.post(`${API_BASE_URL}/v1/auth/verify-signup-otp`, {
         email,
         otp,
         ...userData
@@ -283,7 +282,7 @@ export function AuthProvider({ children }) {
 
   const forgotPassword = async (email) => {
     try {
-      const response = await axios.post(`${API_BASE_URL}/auth/forgot-password`, {
+      const response = await axios.post(`${API_BASE_URL}/v1/auth/forgot-password`, {
         email
       });
       return response.data;
@@ -294,7 +293,7 @@ export function AuthProvider({ children }) {
 
   const resetPassword = async (token, password) => {
     try {
-      const response = await axios.post(`${API_BASE_URL}/auth/reset-password`, {
+      const response = await axios.post(`${API_BASE_URL}/v1/auth/reset-password`, {
         token,
         password
       });
@@ -356,7 +355,7 @@ const apiClient = createApiClient(getTokens, refreshTokenFn, logout);
           });
 
           // Fetch current user
-          const response = await axios.get(`${API_BASE_URL}/auth/me`, {
+          const response = await axios.get(`${API_BASE_URL}/v1/auth/me`, {
             headers: { Authorization: `Bearer ${accessToken}` }
           });
 
