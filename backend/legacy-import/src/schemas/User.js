@@ -91,10 +91,7 @@ const userSchema = new mongoose.Schema({
   lastLogin: Date,
   loginAttempts: { type: Number, default: 0 },
   lockUntil: Date,
-  resetPasswordToken: String,
-  resetPasswordExpire: Date,
-  emailVerified: { type: Boolean, default: false },
-  emailVerificationToken: String
+  emailVerified: { type: Boolean, default: true }
 }, {
   timestamps: true,
   toJSON: { virtuals: true },

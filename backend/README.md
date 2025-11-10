@@ -100,6 +100,8 @@ ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
 
 # Database (currently using in-memory storage)
 DATABASE_TYPE=memory
+
+# Email features deferred for future phase
 ```
 
 ## Development

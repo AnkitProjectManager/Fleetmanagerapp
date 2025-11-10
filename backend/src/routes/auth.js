@@ -44,6 +44,11 @@ const registerValidation = [
     .optional()
     .isIn(['admin', 'fleet_manager', 'technician', 'driver'])
     .withMessage('Invalid role'),
+  body('phone')
+    .optional()
+    .trim()
+    .isMobilePhone('any')
+    .withMessage('Please provide a valid phone number'),
   validateRequest
 ];
 
@@ -77,73 +82,9 @@ const changePasswordValidation = [
   validateRequest
 ];
 
-const otpValidation = [
-  body('email')
-    .isEmail()
-    .withMessage('Please provide a valid email')
-    .normalizeEmail(),
-  body('firstName')
-    .trim()
-    .notEmpty()
-    .withMessage('First name is required'),
-  validateRequest
-];
-
-const verifyOtpValidation = [
-  body('email')
-    .isEmail()
-    .withMessage('Please provide a valid email')
-    .normalizeEmail(),
-  body('otp')
-    .isLength({ min: 6, max: 6 })
-    .withMessage('OTP must be 6 digits'),
-  body('firstName')
-    .trim()
-    .notEmpty()
-    .withMessage('First name is required'),
-  body('lastName')
-    .trim()
-    .notEmpty()
-    .withMessage('Last name is required'),
-  body('password')
-    .isLength({ min: 6 })
-    .withMessage('Password must be at least 6 characters long')
-    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
-    .withMessage('Password must contain at least one lowercase letter, one uppercase letter, and one number'),
-  validateRequest
-];
-
-const forgotPasswordValidation = [
-  body('email')
-    .isEmail()
-    .withMessage('Please provide a valid email')
-    .normalizeEmail(),
-  validateRequest
-];
-
-const resetPasswordValidation = [
-  body('token')
-    .notEmpty()
-    .withMessage('Reset token is required'),
-  body('password')
-    .isLength({ min: 6 })
-    .withMessage('Password must be at least 6 characters long')
-    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
-    .withMessage('Password must contain at least one lowercase letter, one uppercase letter, and one number'),
-  validateRequest
-];
-
 // Routes
 router.post('/login', loginValidation, AuthController.login);
 router.post('/register', registerValidation, AuthController.register);
-
-// OTP-based signup
-router.post('/send-signup-otp', otpValidation, AuthController.sendSignupOtp);
-router.post('/verify-signup-otp', verifyOtpValidation, AuthController.verifySignupOtp);
-
-// Password reset
-router.post('/forgot-password', forgotPasswordValidation, AuthController.forgotPassword);
-router.post('/reset-password', resetPasswordValidation, AuthController.resetPassword);
 
 // Token refresh
 router.post('/refresh-token', AuthController.refreshToken);

@@ -55,12 +55,8 @@ const userSchema = new mongoose.Schema({
   },
   emailVerified: {
     type: Boolean,
-    default: false
+    default: true
   },
-  emailVerificationToken: String,
-  emailVerificationExpires: Date,
-  passwordResetToken: String,
-  passwordResetExpires: Date,
   lastLogin: {
     type: Date,
     default: null
@@ -84,8 +80,6 @@ const userSchema = new mongoose.Schema({
   toJSON: {
     transform: function(doc, ret) {
       delete ret.password;
-      delete ret.emailVerificationToken;
-      delete ret.passwordResetToken;
       delete ret.loginAttempts;
       delete ret.lockUntil;
       return ret;
